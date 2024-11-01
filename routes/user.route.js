@@ -1,11 +1,48 @@
 import User from "../userSchema.js";
 import { Router } from "express";
 
+import multer from 'multer';
+import PdfFile from "../fileSchema.js";
+const storage = multer.memoryStorage(); // Store files in memory
+const upload = multer({ storage: storage });
+
 const userRoute = Router();
 
 userRoute.get('/get', (req, res) => {
     res.send("hello user route")
 })
+
+userRoute.post('/uploadPdf', upload.single('file'), async (req, res) => {
+    try {
+        const { filename, originalname } = req.file;
+        const newPdf = new PdfFile({
+            filename: originalname,
+            content: req.file.buffer,
+            sender: req.body.sender,
+            receiver: req.body.receiver
+        });
+
+        await newPdf.save();
+        res.status(201).json({ message: 'PDF uploaded successfully', file: newPdf });
+    } catch (error) {
+        console.error("Error uploading PDF:", error);
+        res.status(500).json({ message: 'Error uploading PDF' });
+    }
+});
+
+userRoute.get('/pdf/:id', async (req, res) => {
+    try {
+        const pdf = await PdfFile.findById(req.params.id);
+        if (!pdf) {
+            return res.status(404).send('PDF not found');
+        }
+        res.set('Content-Type', 'application/pdf');
+        res.send(pdf.content);
+    } catch (error) {
+        console.error("Error retrieving PDF:", error);
+        res.status(500).send('Error retrieving PDF');
+    }
+});
 userRoute.post('/new', async (req, res) => {
     try {
         const { name, password, socket } = req.body;

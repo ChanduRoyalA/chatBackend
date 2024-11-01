@@ -1,5 +1,6 @@
 import express from "express";
 import { Server } from "socket.io";
+import crypto from 'crypto'
 import http from 'http';
 import dotenv from "dotenv";
 import cors from 'cors';
@@ -34,6 +35,8 @@ app.get('/', (req, res) => {
     res.send('hello');
 });
 
+
+
 io.on('connection', (socket) => {
     // console.log("A user connected");
     socket.on('sendconnection', (data) => {
@@ -49,6 +52,8 @@ io.on('connection', (socket) => {
             const receiverSocket = io.sockets.sockets.get(receiverSocketId);
             // console.log(receiverSocket)
             if (receiverSocket) {
+                // const encryptedData = encryptData(data);
+                // console.log(encryptedData)
                 receiverSocket.emit('receiveMsg', data);
             } else {
                 // console.log(`${data.userToSend} is offline`);
